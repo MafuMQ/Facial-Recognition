@@ -84,26 +84,64 @@ gcloud compute firewall-rules create allow-gunicorn --allow tcp:8000 --source-ra
    - Protocols and ports: Check "Specified protocols and ports" → TCP → Enter `5000` (or `8000`)
 4. Click "Create"
 
-## 7. Run Your Flask App
+## 7. Make Startup Scripts Executable
 
 ```sh
-python app.py
+chmod +x start_app.sh start_dev.sh
 ```
 
+## 8. Run Your Flask App
+
+**Option 1: Development Mode (Flask development server)**
+```sh
+./start_dev.sh
+```
 Your app will be available at:
 - **Local**: http://127.0.0.1:5000
 - **External**: http://YOUR_EXTERNAL_IP:5000
 
+**Option 2: Production Mode (Gunicorn - Recommended)**
+```sh
+./start_app.sh
+```
+Your app will be available at:
+- **Local**: http://127.0.0.1:8000
+- **External**: http://YOUR_EXTERNAL_IP:8000
+
 > **Important:** Use **HTTP** (not HTTPS) to access your app. The Flask development server runs on HTTP by default.
 
-## 8. (Optional) Run with Gunicorn for Production
+## 10. Keep App Running with Screen (Recommended for Production)
 
-```sh
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:8000 app:app
-```
+To keep your app running even after disconnecting from SSH:
 
-## 9. (Optional) Set Up Nginx as Reverse Proxy
+1. **Install screen**:
+   ```sh
+   sudo apt install screen
+   ```
+
+2. **Start a screen session**:
+   ```sh
+   screen -S facial-app
+   ```
+
+3. **Run your app** (inside the screen session):
+   ```sh
+   ./start_app.sh
+   ```
+
+4. **Detach from screen** (keeps app running in background):
+   - Press `Ctrl+A`, then press `D`
+
+5. **Useful screen commands**:
+   - List sessions: `screen -ls`
+   - Reattach to session: `screen -r facial-app`
+   - Kill session: `screen -S facial-app -X quit`
+
+Your app will now continue running even if you close your SSH connection!
+Note that this (Screen) is not a service, so if the VM restarts, you will need to start it again manually.
+In the case you want to automate this on boot, consider creating a systemd service.
+
+## 11. (Optional) Set Up Nginx as Reverse Proxy
 
 - Install Nginx:
   ```sh
