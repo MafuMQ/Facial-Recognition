@@ -128,6 +128,13 @@ def upload_file():
         result['image1_url'] = url_for('static', filename=f'uploads/{filename1}')
         result['image2_url'] = url_for('static', filename=f'uploads/{filename2}')
 
+        # Clean up: Remove uploaded files after processing
+        try:
+            os.remove(filepath1)
+            os.remove(filepath2)
+        except OSError:
+            pass  # Ignore errors if files can't be deleted
+
         return jsonify(result)
 
     except Exception as e:

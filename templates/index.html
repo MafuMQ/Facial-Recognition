@@ -220,29 +220,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        .comparison-images {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .comparison-image {
-            text-align: center;
-        }
-
-        .comparison-image img {
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .comparison-image h4 {
-            margin-top: 10px;
-            color: #666;
-        }
-
         @media (max-width: 768px) {
             .upload-section {
                 grid-template-columns: 1fr;
@@ -254,10 +231,6 @@
             
             .header h1 {
                 font-size: 2rem;
-            }
-            
-            .comparison-images {
-                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -441,21 +414,6 @@
                     <div class="result-message success">${result.message}</div>
                     <div class="likelihood ${likelihoodClass}">Confidence: ${result.likelihood}%</div>
                 `;
-                
-                if (result.image1_url && result.image2_url) {
-                    html += `
-                        <div class="comparison-images">
-                            <div class="comparison-image">
-                                <img src="${result.image1_url}" alt="Image A">
-                                <h4>Image A</h4>
-                            </div>
-                            <div class="comparison-image">
-                                <img src="${result.image2_url}" alt="Image B">
-                                <h4>Image B</h4>
-                            </div>
-                        </div>
-                    `;
-                }
             } else {
                 html = `
                     <div class="result-message error">${result.message}</div>
