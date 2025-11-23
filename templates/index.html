@@ -413,11 +413,45 @@
                 html = `
                     <div class="result-message success">${result.message}</div>
                     <div class="likelihood ${likelihoodClass}">Confidence: ${result.likelihood}%</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; font-size: 1.1rem;">
+                        <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <strong>Image A Gender:</strong> ${result.gender1 || 'Unknown'}<br>
+                            <span style="font-size: 0.9rem; color: #666;">Confidence: ${result.gender1_confidence || 0}%</span><br><br>
+                            <strong>Image A Age:</strong> ${result.age1 || 'Unknown'}<br>
+                            <span style="font-size: 0.9rem; color: #666;">Confidence: ${result.age1_confidence || 0}%</span>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <strong>Image B Gender:</strong> ${result.gender2 || 'Unknown'}<br>
+                            <span style="font-size: 0.9rem; color: #666;">Confidence: ${result.gender2_confidence || 0}%</span><br><br>
+                            <strong>Image B Age:</strong> ${result.age2 || 'Unknown'}<br>
+                            <span style="font-size: 0.9rem; color: #666;">Confidence: ${result.age2_confidence || 0}%</span>
+                        </div>
+                    </div>
                 `;
             } else {
                 html = `
                     <div class="result-message error">${result.message}</div>
                 `;
+                
+                // Show gender and age even if comparison failed but faces were detected
+                if (result.gender1 || result.gender2) {
+                    html += `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; font-size: 1.1rem;">
+                            <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <strong>Image A Gender:</strong> ${result.gender1 || 'Unknown'}<br>
+                                <span style="font-size: 0.9rem; color: #666;">Confidence: ${result.gender1_confidence || 0}%</span><br><br>
+                                <strong>Image A Age:</strong> ${result.age1 || 'Unknown'}<br>
+                                <span style="font-size: 0.9rem; color: #666;">Confidence: ${result.age1_confidence || 0}%</span>
+                            </div>
+                            <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <strong>Image B Gender:</strong> ${result.gender2 || 'Unknown'}<br>
+                                <span style="font-size: 0.9rem; color: #666;">Confidence: ${result.gender2_confidence || 0}%</span><br><br>
+                                <strong>Image B Age:</strong> ${result.age2 || 'Unknown'}<br>
+                                <span style="font-size: 0.9rem; color: #666;">Confidence: ${result.age2_confidence || 0}%</span>
+                            </div>
+                        </div>
+                    `;
+                }
             }
             
             resultContent.innerHTML = html;
