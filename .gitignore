@@ -1,2 +1,4 @@
 # Ignore uploaded images
 static/uploads/
+.vercel/
+__pycache__/
