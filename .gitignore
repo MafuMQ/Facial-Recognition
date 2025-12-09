@@ -1,2 +1,3 @@
 # Ignore uploaded images
 static/uploads/
+__pycache__/
