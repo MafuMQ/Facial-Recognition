@@ -2,7 +2,11 @@ from flask import Flask, render_template, request, jsonify, url_for
 import os
 import uuid
 from werkzeug.utils import secure_filename
-from face_processor import FaceProcessor
+import base64
+import io
+import cv2
+import numpy as np
+import argparse
 
 
 app = Flask(__name__)
@@ -18,8 +22,67 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 # Ensure upload directory exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Initialize face processor
-face_processor = FaceProcessor()
+# Feature flags - can be set via command line arguments
+ENABLE_GENDER_DETECTION = True
+ENABLE_AGE_DETECTION = True
+
+# Gender detection setup
+GENDER_MODEL = "gender_net.caffemodel"
+GENDER_PROTO = "gender_deploy.prototxt"
+GENDER_LIST = ['Male', 'Female']
+
+gender_net = None
+if ENABLE_GENDER_DETECTION:
+    try:
+        gender_net = cv2.dnn.readNetFromCaffe(GENDER_PROTO, GENDER_MODEL)
+        print("Gender detection enabled")
+    except Exception as e:
+        print(f"Error loading gender model: {e}")
+        print("Gender detection disabled")
+else:
+    print("Gender detection disabled")
+
+# Age detection setup
+AGE_MODEL = "age_net.caffemodel"
+AGE_PROTO = "age_deploy.prototxt"
+AGE_LIST = ['(0-2)', '(4-6)', '(8-12)', '(15-20)', '(25-32)', '(38-43)', '(48-53)', '(60-100)']
+
+age_net = None
+if ENABLE_AGE_DETECTION:
+    try:
+        age_net = cv2.dnn.readNetFromCaffe(AGE_PROTO, AGE_MODEL)
+        print("Age detection enabled")
+    except Exception as e:
+        print(f"Error loading age model: {e}")
+        print("Age detection disabled")
+else:
+    print("Age detection disabled")
+
+def detect_gender(face_img):
+    """Detect gender from a face image (numpy array). Returns (gender, confidence)."""
+    if not ENABLE_GENDER_DETECTION or gender_net is None:
+        return "Disabled", 0.0
+    # Preprocess face for gender model
+    blob = cv2.dnn.blobFromImage(face_img, 1.0, (227, 227), [104, 117, 123], swapRB=False)
+    gender_net.setInput(blob)
+    gender_preds = gender_net.forward()
+    gender_idx = gender_preds[0].argmax()
+    gender = GENDER_LIST[gender_idx]
+    confidence = float(gender_preds[0][gender_idx]) * 100  # Convert to percentage and Python float
+    return gender, confidence
+
+def detect_age(face_img):
+    """Detect age from a face image (numpy array). Returns (age_range, confidence)."""
+    if not ENABLE_AGE_DETECTION or age_net is None:
+        return "Disabled", 0.0
+    # Preprocess face for age model
+    blob = cv2.dnn.blobFromImage(face_img, 1.0, (227, 227), [104, 117, 123], swapRB=False)
+    age_net.setInput(blob)
+    age_preds = age_net.forward()
+    age_idx = age_preds[0].argmax()
+    age_range = AGE_LIST[age_idx]
+    confidence = float(age_preds[0][age_idx]) * 100  # Convert to percentage and Python float
+    return age_range, confidence
 
 def allowed_file(filename):
     """Check if the uploaded file has an allowed extension."""
@@ -95,4 +158,20 @@ def clear_uploads():
         return jsonify({'success': False, 'message': f'Error clearing uploads: {str(e)}'})
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Face Recognition Web App')
+    parser.add_argument('--no-gender', action='store_true', help='Disable gender detection')
+    parser.add_argument('--no-age', action='store_true', help='Disable age detection')
+    parser.add_argument('--port', type=int, default=5000, help='Port to run the server on (default: 5000)')
+    parser.add_argument('--debug', action='store_true', help='Run in debug mode')
+    args = parser.parse_args()
+    
+    # Update feature flags based on arguments
+    ENABLE_GENDER_DETECTION = not args.no_gender
+    ENABLE_AGE_DETECTION = not args.no_age
+    
+    print(f"Starting Flask app on port {args.port}")
+    print(f"Gender detection: {'Enabled' if ENABLE_GENDER_DETECTION else 'Disabled'}")
+    print(f"Age detection: {'Enabled' if ENABLE_AGE_DETECTION else 'Disabled'}")
+    
+    app.run(debug=args.debug, host='0.0.0.0', port=args.port)
